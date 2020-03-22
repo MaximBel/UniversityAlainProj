@@ -5,7 +5,7 @@ Serial::Serial(QWidget *parent) : QWidget(parent)
     Serial_port = new QSerialPort (this);
 }
 
-void Serial::Init_Serial(QString Serial_name,int Baud){
+void Serial::open(QString Serial_name,int Baud){
     Serial_port->setPortName(Serial_name);
     Serial_port->setBaudRate(Baud);
     Serial_port->setDataBits(QSerialPort::Data8);
@@ -26,7 +26,7 @@ void Serial::Init_Serial(QString Serial_name,int Baud){
         qDebug() << "+++++++++++++++++++++++++++++++++++";
         qDebug() << "COMPORT Opened";
         qDebug() << "+++++++++++++++++++++++++++++++++++";
-        connect(Serial_port,SIGNAL(readyRead()),this,SLOT(read_port()));
+        connect(Serial_port,SIGNAL(readyRead()),this,SLOT(readFromPort()));
     }
     else
     {
@@ -38,7 +38,7 @@ void Serial::Init_Serial(QString Serial_name,int Baud){
 
 }
 
-void Serial::read_port(){
+void Serial::readFromPort(){
     int start=-1;
     //qDebug() << available;
     //if(available==11){
@@ -93,7 +93,7 @@ void Serial::read_port(){
     }
 }
 
-void Serial :: WriteToPort(){//Запись данных в порт
+void Serial :: writeToPort(){//Запись данных в порт
     QByteArray ctrl;
     if(enabled) {
 
@@ -119,15 +119,15 @@ void Serial::setControl(bool run) {
     }
 }
 
-void Serial::Close_Serial(){
+void Serial::close(){
 
     enabled=false;
-    disconnect(Serial_port,SIGNAL(readyRead()),this,SLOT(read_port()));
+    disconnect(Serial_port,SIGNAL(readyRead()),this,SLOT(readFromPort()));
     Serial_port->close();
 
 }
 
-float Serial::getData(dataType type){
+float Serial::getData(DataType type){
     switch(type){
     case dataInput:
         return inputValue;
@@ -140,6 +140,9 @@ float Serial::getData(dataType type){
     }
 }
 
+QList<QSerialPortInfo> Serial::getPortList() {
+    return QSerialPortInfo::availablePorts();
+}
 
 
 

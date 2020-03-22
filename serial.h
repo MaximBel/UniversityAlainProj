@@ -5,28 +5,32 @@
 #include <QtSerialPort/QSerialPort>
 #include <QDebug>
 #include "stdint.h"
+#include <QSerialPortInfo>
 
 typedef enum {
     dataInput,
     dataOutput
-} dataType;
+} DataType;
 
 class Serial : public QWidget
 {
     Q_OBJECT
-protected:
-    bool enabled=false;
-
-private:
-    uint8_t controlByte = 0;
 
 public:
     explicit Serial(QWidget *parent = 0);
-    void Init_Serial(QString Serial_name,int Baud);
-    void Close_Serial();
+    void open(QString Serial_name,int Baud);
+    void close();
     bool isOpened();
     void setControl(bool run);
+    float getData(DataType type);
 
+    static QList<QSerialPortInfo> getPortList();
+
+public slots:
+    void readFromPort();
+    void writeToPort();
+
+private:
     bool ready_to_write=true;
     QSerialPort *Serial_port;
     union{
@@ -45,14 +49,8 @@ public:
     float outputValue = 0;
 
     bool accident_flag=false;
-
-    float getData(dataType type);
-
-signals:
-
-public slots:
-    void read_port();
-    void WriteToPort();
+    uint8_t controlByte = 0;
+    bool enabled=false;
 };
 
 #endif // SERIAL_H
