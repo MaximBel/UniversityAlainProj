@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QSerialPortInfo>
+#include "plotter.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),

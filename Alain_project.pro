@@ -13,11 +13,15 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
+    configurator.cpp \
         mainwindow.cpp \
+    plotter.cpp \
     qcustomplot.cpp \
     serial.cpp
 
 HEADERS  += mainwindow.h \
+    configurator.h \
+    plotter.h \
     qcustomplot.h \
     serial.h
 
