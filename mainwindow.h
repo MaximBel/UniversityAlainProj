@@ -2,13 +2,19 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <serial.h>
 #include "stdint.h"
-#include "plotter.h"
+#include "functional"
+#include "serial.h"
+#include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
+typedef enum {
+    PlotType_Input,
+    PlotType_Output
+} PlotType_t;
 
 class MainWindow : public QMainWindow
 {
@@ -18,6 +24,15 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void setAccessToPortCallback(std::function<bool(bool, QString, int)> clb);
+    void setPlotCallback(std::function<void(bool)> clb);
+    void setPausePlotCallback(std::function<void(bool)> clb);
+    void setSaveDataCallback(std::function<void(bool)> clb);
+
+    void setSerialPortList(QList<QSerialPortInfo> list);
+
+    QCustomPlot* getCustomPlot(PlotType_t type);
+
 private slots:
     void on_tbAccessToPort_toggled(bool checked);
     void on_tbPlot_toggled(bool checked);
@@ -26,19 +41,10 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    std::shared_ptr<Serial> serial;
-    std::unique_ptr<Plotter> inputDataProtter;
-    std::unique_ptr<Plotter> outputDataProtter;
-
-    QVector<float> DataIn_Buffer;
-    QVector<float> DataOut_Buffer;
-
-    //const QString DataInFile = "SignalIn.txt";
-    //const QString DataOutFile = "SignalOut.txt";
-
-    void WriteDataToFile(QString FileName, QVector<float> *DataVector);
-    void ReadConfigFromFile(void);
-    void ParseConfig(int32_t *var, const QString *line);
+    std::function<bool(bool, QString, int)> clbAccesToPort;
+    std::function<void(bool)> clbPlot;
+    std::function<void(bool)> clbPausePlot;
+    std::function<void(bool)> clbSaveData;
 
     void updateSerialPortList(void);
     void updateSerialBaudList(void);

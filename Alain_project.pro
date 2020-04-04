@@ -15,6 +15,7 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
+    configurationunit.cpp \
     configurator.cpp \
     mainwindow.cpp \
     plotter.cpp \
@@ -23,6 +24,7 @@ SOURCES += main.cpp\
     serialcommandadapter.cpp
 
 HEADERS  += mainwindow.h \
+    configurationunit.h \
     configurator.h \
     datacommand.h \
     plotter.h \
