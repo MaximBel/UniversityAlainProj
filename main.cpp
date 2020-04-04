@@ -6,12 +6,24 @@
 #include "configurator.h"
 #include "serialcommandadapter.h"
 
+static QString configFileName = "/config.ini";
+
 std::shared_ptr<Serial> serial;
 std::unique_ptr<Plotter> inputDataProtter;
 std::unique_ptr<Plotter> outputDataProtter;
 
 QVector<float> DataIn_Buffer;
 QVector<float> DataOut_Buffer;
+
+int32_t vRangeInputMax = 260;
+int32_t vRangeOutputMax = 260;
+int32_t vRangeInputMin = 0;
+int32_t vRangeOutputMin = 0;
+float hRangeInput = 8;
+float hRangeOutput = 8;
+int32_t servTimerPeriod = 30;
+float hStepInput = 0.02;
+float hStepOutput = 0.02;
 
 //const QString DataInFile = "SignalIn.txt";
 //const QString DataOutFile = "SignalOut.txt";
@@ -42,14 +54,20 @@ int main(int argc, char *argv[])
 
 static void setupAll(MainWindow& w) {
     serial = std::make_shared<Serial>();
-    //qApp->applicationDirPath() + "/config.txt"
 
-    w.setPlotCallback(callbackPlot);
-    w.setSaveDataCallback(callbackSaveData);
-    w.setPausePlotCallback(callbackPausePlot);
-    w.setAccessToPortCallback(callbackAccessToPort);
+    auto configurator = std::unique_ptr<Configurator>(new Configurator(qApp->applicationDirPath() + configFileName));
 
-    w.setSerialPortList(serial->getPortList());
+    configurator->registerDataUnit("VRANGE_MAX_INPUT", vRangeInputMax);
+    configurator->registerDataUnit("VRANGE_MIN_INPUT", vRangeInputMin);
+    configurator->registerDataUnit("VRANGE_MAX_OUTPUT", vRangeOutputMax);
+    configurator->registerDataUnit("VRANGE_MIN_OUTPUT", vRangeOutputMin);
+    configurator->registerDataUnit("HRANGE_INPUT", hRangeInput);
+    configurator->registerDataUnit("HRANGE_OUTPUT", hRangeOutput);
+    configurator->registerDataUnit("HSTEP_INPUT", hStepInput);
+    configurator->registerDataUnit("HSTEP_OUTPUT", hStepOutput);
+    configurator->registerDataUnit("SERV_TIMER_PERIOD", servTimerPeriod);
+
+    configurator->readConfig();
 
     inputDataProtter = std::unique_ptr<PlotterBuilder>(new PlotterBuilder(w.getCustomPlot(PlotType_Input), 30))
             ->setVerticalRange(0, 260)
@@ -61,6 +79,13 @@ static void setupAll(MainWindow& w) {
             .setHorizontalResolution(8, 0.02)
             .setInputDataCommand(std::make_shared<SerialCommandAdapter>(serial, dataOutput))
             .createPlotter();
+
+    w.setPlotCallback(callbackPlot);
+    w.setSaveDataCallback(callbackSaveData);
+    w.setPausePlotCallback(callbackPausePlot);
+    w.setAccessToPortCallback(callbackAccessToPort);
+
+    w.setSerialPortList(serial->getPortList());
 
     DataIn_Buffer.resize(0);
     DataOut_Buffer.resize(0);

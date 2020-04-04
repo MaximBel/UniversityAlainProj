@@ -9,16 +9,20 @@
 class Configurator
 {
 public:
-    Configurator(std::string configFilePath);
+    Configurator(QString configFilePath);
     virtual ~Configurator() = default;
 
-    template<class T>
-    void registerDataUnit(std::string key, T& dataVar);
     void readConfig();
 
 private:
-    std::string configFIle;
+    QString configFIle;
     std::list<std::unique_ptr<ConfigurationUnitBase>> unitList;
+
+public:
+    template<typename T>
+    void registerDataUnit(QString key, T& dataVar) {
+        unitList.emplace_back(std::unique_ptr<ConfigurationUnitBase>(new ConfigurationUnit<T>(key, dataVar)));
+    }
 };
 
 #endif // CONFIGURATOR_H

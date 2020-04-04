@@ -15,7 +15,6 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-    configurationunit.cpp \
     configurator.cpp \
     mainwindow.cpp \
     plotter.cpp \
