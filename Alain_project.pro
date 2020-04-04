@@ -16,6 +16,9 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
     configurator.cpp \
+    logger.cpp \
+    loggercommandadapter.cpp \
+    logstrategysimple.cpp \
     mainwindow.cpp \
     plotter.cpp \
     qcustomplot.cpp \
@@ -26,6 +29,9 @@ HEADERS  += mainwindow.h \
     configurationunit.h \
     configurator.h \
     datacommand.h \
+    logger.h \
+    loggercommandadapter.h \
+    logstrategysimple.h \
     plotter.h \
     qcustomplot.h \
     serial.h \

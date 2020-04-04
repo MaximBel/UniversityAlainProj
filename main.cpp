@@ -5,10 +5,15 @@
 #include "plotter.h"
 #include "configurator.h"
 #include "serialcommandadapter.h"
+#include "logger.h"
+#include "loggercommandadapter.h"
+#include "logstrategysimple.h"
 
 static QString configFileName = "/config.ini";
 
 std::shared_ptr<Serial> serial;
+std::shared_ptr<Logger> loggerInput;
+std::shared_ptr<Logger> loggerOutput;
 std::unique_ptr<Plotter> inputDataProtter;
 std::unique_ptr<Plotter> outputDataProtter;
 
@@ -25,10 +30,9 @@ int32_t servTimerPeriod = 30;
 float hStepInput = 0.02;
 float hStepOutput = 0.02;
 
-//const QString DataInFile = "SignalIn.txt";
-//const QString DataOutFile = "SignalOut.txt";
+const QString DataInFile = "SignalIn.txt";
+const QString DataOutFile = "SignalOut.txt";
 static void setupAll(MainWindow& w);
-static void WriteDataToFile(QString FileName, QVector<float> *DataVector);
 static bool callbackAccessToPort(bool state, QString port, int baud);
 static void callbackPlot(bool state);
 static void callbackPausePlot(bool state);
@@ -54,6 +58,11 @@ int main(int argc, char *argv[])
 
 static void setupAll(MainWindow& w) {
     serial = std::make_shared<Serial>();
+    loggerInput = std::make_shared<Logger>(DataInFile);
+    loggerOutput = std::make_shared<Logger>(DataOutFile);
+
+    loggerInput->registerNewStrategy(std::unique_ptr<LogStrategyBase>(new LogStrategySimple()));
+    loggerOutput->registerNewStrategy(std::unique_ptr<LogStrategyBase>(new LogStrategySimple()));
 
     auto configurator = std::unique_ptr<Configurator>(new Configurator(qApp->applicationDirPath() + configFileName));
 
@@ -69,15 +78,17 @@ static void setupAll(MainWindow& w) {
 
     configurator->readConfig();
 
-    inputDataProtter = std::unique_ptr<PlotterBuilder>(new PlotterBuilder(w.getCustomPlot(PlotType_Input), 30))
-            ->setVerticalRange(0, 260)
-            .setHorizontalResolution(8, 0.02)
+    inputDataProtter = std::unique_ptr<PlotterBuilder>(new PlotterBuilder(w.getCustomPlot(PlotType_Input), servTimerPeriod))
+            ->setVerticalRange(vRangeInputMin, vRangeInputMax)
+            .setHorizontalResolution(hRangeInput, hStepInput)
             .setInputDataCommand(std::make_shared<SerialCommandAdapter>(serial, dataInput))
+            .setOutputDataCommand(std::make_shared<LoggerCommandAdapter>(loggerInput))
             .createPlotter();
-    outputDataProtter = std::unique_ptr<PlotterBuilder>(new PlotterBuilder(w.getCustomPlot(PlotType_Output), 30))
-            ->setVerticalRange(0, 260)
-            .setHorizontalResolution(8, 0.02)
+    outputDataProtter = std::unique_ptr<PlotterBuilder>(new PlotterBuilder(w.getCustomPlot(PlotType_Output), servTimerPeriod))
+            ->setVerticalRange(vRangeOutputMin, vRangeOutputMax)
+            .setHorizontalResolution(hRangeOutput, hStepOutput)
             .setInputDataCommand(std::make_shared<SerialCommandAdapter>(serial, dataOutput))
+            .setOutputDataCommand(std::make_shared<LoggerCommandAdapter>(loggerOutput))
             .createPlotter();
 
     w.setPlotCallback(callbackPlot);
@@ -91,25 +102,6 @@ static void setupAll(MainWindow& w) {
     DataOut_Buffer.resize(0);
 }
 
-static void WriteDataToFile(QString FileName, QVector<float> *DataVector) {
-//    QFile OutputFile(qApp->applicationDirPath() + "/"+ FileName);
-
-//    if(OutputFile.open(QIODevice::WriteOnly | QIODevice::Truncate) == true) {
-
-//        QTextStream OutputStream(&OutputFile);
-
-//        for(int counter = 0; counter < DataVector->size(); counter++) {
-
-//            OutputStream << DataVector->data()[counter];
-
-//            OutputStream << ' ';
-
-//        }
-
-//        OutputFile.close();
-
-//    }
-}
 static bool callbackAccessToPort(bool state, QString port, int baud) {
     if(state) {
         serial->open(port,baud);
@@ -147,8 +139,8 @@ static void callbackPausePlot(bool state) {
         inputDataProtter->stop();
         outputDataProtter->stop();
     } else {
-        //DataIn_Buffer.resize(0);
-        //DataOut_Buffer.resize(0);
+        loggerInput->clearData();
+        loggerOutput->clearData();
 
         inputDataProtter->start();
         outputDataProtter->start();
@@ -156,10 +148,8 @@ static void callbackPausePlot(bool state) {
 }
 static void callbackSaveData(bool state) {
     (void)state;
-    //    if(DataIn_Buffer.size() != 0 && DataOut_Buffer.size() != 0) {
-    //        WriteDataToFile(DataInFile, &DataIn_Buffer);
-    //        WriteDataToFile(DataOutFile, &DataOut_Buffer);
-    //        DataIn_Buffer.resize(0);
-    //        DataOut_Buffer.resize(0);
-    //    }
+    loggerInput->saveDataToFile();
+    loggerOutput->saveDataToFile();
+    loggerInput->clearData();
+    loggerOutput->clearData();
 }
