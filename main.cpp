@@ -11,27 +11,27 @@
 
 static QString configFileName = "/config.ini";
 
-std::shared_ptr<Serial> serial;
-std::shared_ptr<Logger> loggerInput;
-std::shared_ptr<Logger> loggerOutput;
-std::unique_ptr<Plotter> inputDataProtter;
-std::unique_ptr<Plotter> outputDataProtter;
+//TODO: move this to the config file
+static const QString DataInFile = "/SignalIn.txt";
+static const QString DataOutFile = "/SignalOut.txt";
 
-QVector<float> DataIn_Buffer;
-QVector<float> DataOut_Buffer;
+// default params
+static int32_t vRangeInputMax = 260;
+static int32_t vRangeOutputMax = 260;
+static int32_t vRangeInputMin = 0;
+static int32_t vRangeOutputMin = 0;
+static float hRangeInput = 8;
+static float hRangeOutput = 8;
+static int32_t servTimerPeriod = 30;
+static float hStepInput = 2;
+static float hStepOutput = 2;
 
-int32_t vRangeInputMax = 260;
-int32_t vRangeOutputMax = 260;
-int32_t vRangeInputMin = 0;
-int32_t vRangeOutputMin = 0;
-float hRangeInput = 8;
-float hRangeOutput = 8;
-int32_t servTimerPeriod = 30;
-float hStepInput = 0.02;
-float hStepOutput = 0.02;
+static std::shared_ptr<Serial> serial;
+static std::shared_ptr<Logger> loggerInput;
+static std::shared_ptr<Logger> loggerOutput;
+static std::unique_ptr<Plotter> inputDataProtter;
+static std::unique_ptr<Plotter> outputDataProtter;
 
-const QString DataInFile = "SignalIn.txt";
-const QString DataOutFile = "SignalOut.txt";
 static void setupAll(MainWindow& w);
 static bool callbackAccessToPort(bool state, QString port, int baud);
 static void callbackPlot(bool state);
@@ -58,8 +58,8 @@ int main(int argc, char *argv[])
 
 static void setupAll(MainWindow& w) {
     serial = std::make_shared<Serial>();
-    loggerInput = std::make_shared<Logger>(DataInFile);
-    loggerOutput = std::make_shared<Logger>(DataOutFile);
+    loggerInput = std::make_shared<Logger>(qApp->applicationDirPath() + DataInFile);
+    loggerOutput = std::make_shared<Logger>(qApp->applicationDirPath() + DataOutFile);
 
     loggerInput->registerNewStrategy(std::unique_ptr<LogStrategyBase>(new LogStrategySimple()));
     loggerOutput->registerNewStrategy(std::unique_ptr<LogStrategyBase>(new LogStrategySimple()));
@@ -97,9 +97,6 @@ static void setupAll(MainWindow& w) {
     w.setAccessToPortCallback(callbackAccessToPort);
 
     w.setSerialPortList(serial->getPortList());
-
-    DataIn_Buffer.resize(0);
-    DataOut_Buffer.resize(0);
 }
 
 static bool callbackAccessToPort(bool state, QString port, int baud) {

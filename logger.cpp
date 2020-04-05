@@ -15,6 +15,9 @@ void Logger::clearData() {
 }
 
 void Logger::saveDataToFile() {
+    if(!dataVector.size()) {
+        return;
+    }
     for (auto it=strategyList.begin(); it != strategyList.end(); ++it) {
         it->get()->saveData(outputFilePath, dataVector);
     }

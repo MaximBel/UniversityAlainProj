@@ -31,8 +31,7 @@ protected:
 
 private:
     static std::unique_ptr<QTimer> plotTimer;
-    float lastPointKey;
-    float startPointKey;
+    double startPointKey;
 
     static void initializeStatic();
 

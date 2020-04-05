@@ -45,7 +45,7 @@ std::unique_ptr<Plotter> PlotterBuilder::createPlotter() {
     plot->horResolution = horResolution;
     plot->horStepResolution = horStepResolution;
     plot->inputDataCommand = inputDataCommand;
-    plot->outputDataCommand = inputDataCommand;
+    plot->outputDataCommand = outputDataCommand;
 
     return plot;
 }
@@ -54,7 +54,7 @@ std::unique_ptr<Plotter> PlotterBuilder::createPlotter() {
 // PLOTTER
 //////////
 
-Plotter::Plotter(): lastPointKey(0), startPointKey(0) {
+Plotter::Plotter(): startPointKey(0) {
     if(!plotTimer) {
         plotTimer = std::unique_ptr<QTimer>(new QTimer());
     }
@@ -79,9 +79,9 @@ void Plotter::initialize() {
     uiPlot->graph(1)->setLineStyle(QCPGraph::lsNone);//без линии
     uiPlot->graph(1)->setScatterStyle(QCPScatterStyle::ssDisc);//тип фигуры(диск)
 
-    uiPlot->xAxis->setTickLabelType(QCPAxis::ltNumber);//ось х-число
-    //uiPlot->xAxis->setDateTimeFormat("hh:mm:ss");//тип времени(часы:минуты:секунды)
+    uiPlot->xAxis->setTickLabelType(QCPAxis::ltNumber);//ось х-время
     uiPlot->xAxis->setAutoTickStep(false);
+    uiPlot->xAxis->setTickLabelRotation(90); // повернуть надписи оси Х на 90 град
     uiPlot->xAxis->setTickStep(horStepResolution);//шаг по оси Х
     uiPlot->axisRect()->setupFullAxesBox();
 
@@ -92,8 +92,7 @@ void Plotter::initialize() {
     connect(uiPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), uiPlot->xAxis2, SLOT(setRange(QCPRange)));
 }
 void Plotter::start() {
-    startPointKey = QDateTime::currentDateTime().toMSecsSinceEpoch();
-    lastPointKey = 0;
+    startPointKey = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
 
     connect(plotTimer.get(), SIGNAL(timeout()), this, SLOT(slotPlotUpdate()));//перестройка графика по сигналу от таймера
 }
@@ -112,10 +111,9 @@ void Plotter::initializeStatic() {
 }
 
 void Plotter::slotPlotUpdate() {
-    float key = QDateTime::currentDateTime().toMSecsSinceEpoch() - startPointKey;
-    float value=inputDataCommand->runCommand(0);
+    double key = (QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0 - startPointKey);
 
-    //ui->input_line->setText(QString::number(serial->getData(dataInput)));
+    float value=inputDataCommand->runCommand(0);
 
     // добавление точки на графике addData(x,y):
     uiPlot->graph(0)->addData(key, value);
@@ -132,8 +130,4 @@ void Plotter::slotPlotUpdate() {
     if(outputDataCommand) {
         (void)outputDataCommand->runCommand(value);
     }
-
-    lastPointKey = key;
 }
-
-

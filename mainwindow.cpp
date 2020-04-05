@@ -58,12 +58,12 @@ void MainWindow::on_tbPlot_toggled(bool checked) {
     if(checked){
         clbPlot(true);
 
-        ui->tbPlot->setEnabled(false);
+        //ui->tbPlot->setEnabled(false);
         ui->pbPause->setEnabled(true);
     }else{
         clbPlot(false);
 
-        ui->tbPlot->setEnabled(true);
+        //ui->tbPlot->setEnabled(true);
         ui->pbPause->setEnabled(false);
     }
 }
